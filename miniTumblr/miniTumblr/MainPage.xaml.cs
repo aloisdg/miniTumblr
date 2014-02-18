@@ -22,6 +22,44 @@ namespace miniTumblr
             //BuildLocalizedApplicationBar();
         }
 
+        private void Button_Click(object sender, RoutedEventArgs e)
+        {
+            Fill();
+        }
+
+        private void Fill()
+        {
+            WebClient tumblr = new WebClient();
+
+            tumblr.DownloadStringCompleted += new DownloadStringCompletedEventHandler(tumblr_DownloadStringCompleted);
+            tumblr.DownloadStringAsync(new Uri(String.Format("http://{0}.tumblr.com/rss", tumblrName.Text)));
+        }
+
+        private void tumblr_DownloadStringCompleted(object sender, DownloadStringCompletedEventArgs e)
+        {
+            if (e.Error != null)
+                return;
+
+            XElement xmlTumblr = XElement.Parse(e.Result);
+            List<TumblrItem> TumblrItems = new List<TumblrItem>();
+
+            // First foreach, no linq for now.
+            foreach (var item in xmlTumblr.Descendants("item"))
+            {
+                TumblrItem tmp = new TumblrItem();
+                tmp.Title = item.Element("title").Value.ToString();
+                tmp.ImageSource = ExtractImage(item.Element("description").Value.ToString());
+                TumblrItems.Add(tmp);
+            }
+
+            Lili.ItemsSource = TumblrItems;
+        }
+
+        private string ExtractImage(string desc)
+        {
+            return ExtracterHelper.ExtractString(desc, "img src=\"", "\"/>");
+        }
+
         // Sample code for building a localized ApplicationBar
         //private void BuildLocalizedApplicationBar()
         //{
